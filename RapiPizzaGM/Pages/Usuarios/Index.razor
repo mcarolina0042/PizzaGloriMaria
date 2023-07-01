@@ -1,0 +1,123 @@
+﻿@page "/usuarios"
+<h3>Usuarios(@Usuarios.Count)</h3>
+<div class="mb-2">
+	<button class="btn btn-success"
+		@onclick="()=>{ShowForm = !ShowForm;}">
+		Agregar
+	</button>
+</div>
+<div class="container">
+	@if (ShowForm)
+	{
+		<EditForm Model="request" OnValidSubmit="Send">
+			<div class="mb-3 input-group" >
+				<label>
+					Nombre
+				</label>
+				<InputText @bind-value="@request.Nombre">
+
+				</InputText>
+			</div>
+			<div class="mb-3">
+				<label>
+					Email
+				</label>
+				<InputText @bind-value="@request.Email">
+
+				</InputText>
+			</div>
+			<div class="mb-3">
+				<label>
+					Contraseña
+				</label>
+				<InputText @bind-value="@request.Contraseña">
+
+				</InputText>
+			</div>
+			<div class="mb-3">
+				<label>
+					Sexo
+				</label>
+				<InputText @bind-value="@request.Sexo">
+
+				</InputText>
+			</div>
+		</EditForm>
+		<br />
+	}
+
+	@foreach (var usuario in Usuarios)
+	{
+		<div class="card" style="width:18rem;">
+			<div class="card-body">
+				<label class="card-title">@usuario.Nombre </label>
+				<div class="card-text">
+					<label><b>Email</b> @usuario.Email</label>
+				</div>
+				<div>
+					<button class="btn btn-warning">Editar</button>
+					<button class="btn btn-danger">Eliminar</button>
+				</div>
+			</div>
+		</div>
+	}
+
+</div>
+@code {
+
+	public bool ShowForm { get; set; } = false;
+	public string Filtro { get; set; } = "";
+
+	public List<UsuarioResponse> Usuarios { get; set; }
+	= new List<UsuarioResponse>();
+
+	public UsuarioRequest request { get; set; } = new UsuarioRequest();
+
+	async Task CargarUsuarios()
+	{
+		var resultado = await UsuarioServices.Consultar(Filtro);
+		if (resultado.Success)
+		{
+			Usuarios = resultado.Data!;
+		}
+	}
+
+	protected override async Task OnInitializedAsync()
+	{
+		await CargarUsuarios();
+	}
+
+	public async Task Send()
+	{
+		if (request.Id == 0)
+		{
+			//Debo Registrar El Usuario...
+			var r = await UsuarioServices.Crear(request);
+			if (r.Success)
+			{
+				await CargarUsuarios();
+				StateHasChanged();
+			}
+		}
+		else
+		{
+			//Debo Solicitar Modificar Usuario...
+			var r = await UsuarioServices.Modificar(request);
+			if (r.Success)
+			{
+				await CargarUsuarios();
+				StateHasChanged();
+			}
+		}
+	}
+
+	public void Seleccionar(int Id, bool showForm = true)
+	{
+		ShowForm = showForm;
+		request = Usuarios
+				.Where(c => c.Id == Id)
+				.Select(c => c.ToRequest())
+				.FirstOrDefault() ?? new UsuarioRequest();
+	}
+
+}

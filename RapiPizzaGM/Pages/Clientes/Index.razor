@@ -1,0 +1,315 @@
+﻿@page "/clientes"
+@using RapiPizzaGM.Data.Models
+@using RapiPizzaGM.Data.Request
+@using RapiPizzaGM.Data.Response
+@using RapiPizzaGM.Data.Services
+@using Microsoft.EntityFrameworkCore
+
+<h3 class="text-center">Lista de Clientes (@Clientes.Count)</h3>
+
+<div class="mb-4">
+    <button class="btn btn-success" @onclick="MostrarFormulario">
+        <i class="fas fa-plus-circle"></i> Agregar Cliente
+    </button>
+</div>
+
+<div class="container">
+    @if (ShowForm)
+    {
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-body">
+                        <EditForm Model="request" OnValidSubmit="Send">
+                            <div class="mb-3 input-group">
+                                <label for="nombreCliente" class="form-label">Nombre del Cliente</label>
+                                <InputText @bind-Value="@request.Nombre" id="nombreCliente" class="form-control">
+                                </InputText>
+                            </div>
+
+                            <div class="text-center">
+                                <button type="submit" class="btn btn-outline-success">
+                                    <i class="fas fa-save"></i> @GetFormButtonLabel()
+                                </button>
+
+                                <button type="button" class="btn btn-outline-danger" @onclick="Cancelar">
+                                    <i class="fas fa-times"></i> Cancelar
+                                </button>
+                            </div>
+                        </EditForm>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <br />
+    }
+</div>
+
+<!-- Agrega este enlace para cargar Font Awesome -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
+<style>
+    /* Estilos personalizados para el formulario interactivo */
+
+    /* Estilo para los botones con ícono */
+    .btn i {
+        margin-right: 5px;
+    }
+
+    /* Estilo para el formulario */
+    .card {
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Estilo para el título del formulario */
+    .card-body .form-label {
+        font-size: 1.2rem;
+        font-weight: bold;
+    }
+
+    /* Estilo para los campos de entrada */
+    .form-control {
+        height: 45px;
+        font-size: 1rem;
+    }
+
+    /* Estilo para los botones de acción */
+    .btn-outline-success,
+    .btn-outline-danger {
+        width: 150px;
+        margin: 10px;
+        font-size: 1rem;
+        transition: filter 0.3s ease-in-out;
+    }
+
+        .btn-outline-success:hover,
+        .btn-outline-danger:hover {
+            filter: brightness(110%);
+        }
+
+    /* Estilo para el contenedor principal */
+    .container {
+        padding: 20px;
+    }
+
+    /* Estilo para los botones con ícono */
+    .btn i {
+        margin-right: 5px;
+    }
+</style>
+
+    <div class="container" style="background-color: #f5f5f5;">
+        <div class="row">
+            @foreach (var cliente in Clientes)
+            {
+                <div class="col-md-4 mb-3">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title text-center mb-4">@cliente.Nombre</h5>
+                            <div class="text-center">
+                                <div class="btn-group">
+                                <button class="btn btn-warning btn-icon" @onclick="() => Seleccionar(cliente.Id)">
+                                    <i class="oi oi-pencil"></i> Editar
+                                </button>
+
+                                    <button class="btn btn-danger btn-icon" @onclick="()=>Eliminar(cliente)">
+                                        <span class="oi oi-trash"></span> Eliminar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+
+    <style>
+        /* Estilos personalizados */
+        .container {
+            padding: 20px;
+            border-radius: 5px; /* Añadimos bordes redondeados */
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Añadimos una sombra suave */
+            background-color: #f5f5f5; /* Color de fondo gris claro */
+        }
+
+        .card {
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease-in-out;
+        }
+
+            .card:hover {
+                transform: scale(1.05);
+            }
+
+        .card-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        .btn-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 35px; /* Reducimos la altura de los botones */
+            font-size: 1rem; /* Ajustamos el tamaño del texto */
+        }
+
+        .btn-warning {
+            background-color: #ffc107;
+            color: #fff;
+            border-color: #ffc107;
+        }
+
+        .btn-danger {
+            background-color: #dc3545;
+            color: #fff;
+            border-color: #dc3545;
+        }
+
+            .btn-warning:hover,
+            .btn-danger:hover {
+                filter: brightness(110%);
+            }
+    </style>
+
+
+
+<!-- Asegúrate de haber agregado el enlace de Font Awesome en _Host.cshtml o index.html -->
+
+<style>
+    /* Estilos personalizados */
+    .container {
+        padding: 20px;
+    }
+
+    .mb-2 {
+        margin-bottom: 20px;
+    }
+
+    .input-group label {
+        margin-right: 10px;
+    }
+
+    .card {
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .card-title {
+        font-size: 1.2rem;
+        font-weight: bold;
+    }
+
+    .btn-group {
+        margin-top: 10px;
+    }
+</style>
+
+@code {
+    public bool ShowForm { get; set; } = false;
+    public string Filtro { get; set; } = "";
+
+    public List<ClientesResponse> Clientes { get; set; } = new List<ClientesResponse>();
+
+    public ClientesRequest request { get; set; } = new ClientesRequest();
+
+    private string GetFormButtonLabel()
+    {
+        return request.Id == 0 ? "Agregar" : "Modificar";
+    }
+
+    void Cancelar()
+    {
+        request = new ClientesRequest();
+        ShowForm = false;
+    }
+
+    async Task CargarClientes()
+    {
+        var resultado = await ClientesServices.Consultar(Filtro);
+        if (resultado.Success)
+        {
+            Clientes = resultado.Data!;
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarClientes();
+    }
+
+    public async Task Send()
+    {
+        if (request.Id == 0)
+        {
+            var r = await ClientesServices.Crear(request);
+            if (r.Success)
+            {
+                await CargarClientes();
+                ShowForm = false; // Ocultar el formulario después de agregar un cliente
+                StateHasChanged();
+            }
+            else
+            {
+                // Aquí puedes mostrar un mensaje de error si lo deseas.
+            }
+        }
+        else
+        {
+            var r = await ClientesServices.Modificar(request);
+            if (r.Success)
+            {
+                await CargarClientes();
+                ShowForm = false; // Ocultar el formulario después de modificar un cliente
+                StateHasChanged();
+            }
+            else
+            {
+                // Aquí puedes mostrar un mensaje de error si lo deseas.
+            }
+        }
+    }
+
+    public async Task Eliminar(ClientesResponse cliente)
+    {
+        var request = cliente.ToRequest();
+        var resultado = await ClientesServices.Eliminar(request);
+        if (resultado.Success)
+        {
+            await CargarClientes();
+            StateHasChanged();
+        }
+        else
+        {
+            // Aquí puedes mostrar un mensaje de error si lo deseas.
+        }
+    }
+
+    public void MostrarFormulario()
+    {
+        request = new ClientesRequest();
+        ShowForm = true;
+    }
+
+    public void Seleccionar(int clienteId)
+    {
+        var cliente = Clientes.FirstOrDefault(c => c.Id == clienteId);
+        if (cliente != null)
+        {
+            request = cliente.ToRequest();
+            ShowForm = true;
+        }
+        else
+        {
+            // Aquí puedes mostrar un mensaje de error si lo deseas.
+        }
+    }
+}
+

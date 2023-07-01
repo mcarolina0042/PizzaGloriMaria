@@ -1,0 +1,230 @@
+﻿@page "/facturas"
+@using RapiPizzaGM.Data.Models
+@using System.Linq
+@inject IFacturaServices FacturaServices
+
+<h3>Facturas (@facturas.Count)</h3>
+<div class="mb-2">
+    <button class="btn btn-success" @onclick="ToggleForm">
+        Agregar
+    </button>
+</div>
+<div class="container">
+    @if (ShowForm)
+    {
+        @if (ShowForm)
+        {
+            <form>
+                <!-- Código del formulario para agregar o modificar una factura -->
+
+                <div class="mb-3">
+                    <label for="clienteId" class="form-label">Cliente:</label>
+                    <select class="form-select" id="clienteId" @bind="@request.ClienteId">
+                        @foreach (var cliente in clientes)
+                        {
+                            <option value="@cliente.Id">@cliente.Nombre</option>
+                        }
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label for="pizzaId" class="form-label">Pizza:</label>
+                    <select class="form-select" id="pizzaId" @bind="@selectedPizza.Id">
+                        @foreach (var pizza in pizzas)
+                        {
+                            <option value="@pizza.Id">@pizza.Nombre</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label for="referencia" class="form-label">Referencia:</label>
+                    <input type="text" class="form-control" id="referencia" @bind="@request.Referencia" />
+                </div>
+                <div class="mb-3">
+                    <label for="cantidad" class="form-label">Cantidad De pizzas:</label>
+                    <input type="number" class="form-control" id="cantidad" @bind="@request.Cantidad" />
+                </div>
+
+                <!-- Agregar más campos aquí -->
+                <div class="mb-3">
+                    <label for="extra" class="form-label">Extra:</label>
+                    <input type="text" class="form-control" id="extra" @bind="@request.Extra" />
+                </div>
+
+                <div class="mb-3">
+                    <label for="subTotal" class="form-label">SubTotal:</label>
+                    <input type="number" class="form-control" id="subTotal" @bind="@request.SubTotal" />
+                </div>
+
+                <div class="mb-3">
+                    <label for="descuento" class="form-label">Descuento:</label>
+                    <input type="number" class="form-control" id="descuento" @bind="@request.Descuento" />
+                </div>
+
+                <div class="mb-3">
+                    <label for="itbis" class="form-label">ITBIS:</label>
+                    <input type="number" class="form-control" id="itbis" @bind="@request.ITBIS" />
+                </div>
+
+                <!-- Calcular el Total -->
+                <div class="mb-3">
+                    <label class="form-label">Total:</label>
+                    <input type="number" class="form-control" readonly value="@request.Total" />
+                </div>
+
+                <button type="submit" class="btn btn-primary" @onclick="OnValidSubmit">Guardar</button>
+                <button type="button" class="btn btn-secondary" @onclick="ToggleForm">Cancelar</button>
+            </form>
+        }
+
+    }
+    <br />
+
+    <div class="row row-cols-1 row-cols-md-3 g-4">
+        <table class="table table-bordered table-striped">
+            <thead>
+                <tr>
+                   @* <th>Factura N°</th>*@
+                    <th>Cliente</th>
+                    <th>Pizza</th>
+                    <th>Referencia</th>
+                    <th>Cantidad</th>
+                    <th>Extra</th>
+                    <th>SubTotal</th>
+                    <th>Descuento</th>
+                    <th>ITBIS</th>
+                    <th>Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var factura in facturas)
+                {
+                    <tr>
+                      @*  <td>@factura.Id</td>*@
+                        <td>@factura.ClienteId</td>
+                        <td>@factura.PizzaId</td>
+                        <td>@factura.Referencia</td>
+                        <td>@factura.Cantidad</td>
+                        <td>@factura.Extra</td>
+                        <td>@factura.SubTotal</td>
+                        <td>@factura.Descuento</td>
+                        <td>@factura.ITBIS</td>
+                        <td>@factura.Total</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@code {
+
+    
+    public List<PizzaResponse> pizzas { get; set; } = new List<PizzaResponse>();
+    public PizzaResponse selectedPizza { get; set; } = new PizzaResponse();
+
+
+
+
+    public List<RapiPizzaGM.Data.Response.ClientesResponse> clientes { get; set; } = new List<RapiPizzaGM.Data.Response.ClientesResponse>();
+
+    public bool ShowForm { get; set; } = false;
+    public string Filtro { get; set; } = "";
+
+    
+
+    public List<FacturaResponse> facturas { get; set; } = new List<FacturaResponse>();
+    public FacturaRequest request { get; set; } = new FacturaRequest();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarFacturas();
+        await CargarClientes();
+        await CargarPizzas();
+        
+    }
+    private async Task CargarPizzas()
+    {
+        var resultado = await PizzaServices.Consultar(""); // O el método correspondiente para obtener las pizzas
+        if (resultado.Success)
+        {
+            pizzas = resultado.Data ?? new List<PizzaResponse>();
+        }
+        else
+        {
+            // Manejar el error, si es necesario.
+        }
+    }
+
+
+    async Task CargarClientes()
+    {
+        var resultado = await ClientesServices.Consultar(Filtro);
+        if (resultado.Success)
+        {
+            clientes = resultado.Data!;
+        }
+    }
+
+
+    private async Task CargarFacturas()
+    {
+        var result = await FacturaServices.Consultar(Filtro);
+        if (result.Success)
+        {
+            facturas = result.Data ?? new List<FacturaResponse>();
+        }
+        else
+        {
+            // Manejar el error, si es necesario.
+        }
+    }
+
+    public async Task OnValidSubmit()
+    {
+        if (request.Id == 0)
+        {
+            // Asignar la pizza seleccionada a la propiedad request.PizaId
+            request.PizzaId = selectedPizza.Id;
+
+            // Crear una FacturaRequest a partir de los datos de la factura
+            var facturaRequest = new FacturaRequest
+                {
+                    ClienteId = request.ClienteId,
+                    PizzaId = request.PizzaId,
+                    Referencia = request.Referencia,
+                    Extra = request.Extra,
+                    SubTotal = request.SubTotal,
+                    Cantidad = request.Cantidad,
+                    Descuento = request.Descuento,
+                    ITBIS = request.ITBIS,
+                    Total = request.Total,
+                    
+                };
+
+            var resultado = await FacturaServices.Crear(facturaRequest);
+            if (resultado.Success)
+            {
+                ToggleForm();
+                await CargarFacturas(); // Para actualizar la lista de facturas después de agregar una nueva
+            }
+            else
+            {
+                // Manejar el error si la creación falla.
+            }
+        }
+    }
+
+
+
+    private void ToggleForm()
+    {
+        ShowForm = !ShowForm;
+        if (!ShowForm)
+        {
+            // Reset the form when hiding it
+            request = new FacturaRequest();
+        }
+    }
+}
+
